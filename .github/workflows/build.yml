@@ -12,7 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build APK with Buildozer
+      - name: Build APK
         uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
         with:
