@@ -3,25 +3,52 @@ name: Build Android APK
 on:
   workflow_dispatch:
 
+env:
+  PYTHONFORANDROID_PREREQUISITES_INSTALL_INTERACTIVE: 0
+
 jobs:
   build:
+    name: Build APK
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Build APK with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
+      - name: Setup Python
+        uses: actions/setup-python@v7
         with:
-          command: buildozer android debug
-          buildozer_version: stable
-          repository_root: .
-          workdir: .
+          python-version: "3.x"
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Buildozer
+        run: |
+          pip install .
+
+      - name: Accept Android SDK license
+        run: |
+          sed -i.bak "s/# android.accept_sdk_license = False/android.accept_sdk_license = True/" buildozer.spec
+
+      - name: Download Android SDK, NDK and p4a
+        run: |
+          buildozer android p4a -- --help
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt update
+          sudo apt -y install automake libltdl-dev
+
+      - name: Build APK
+        run: |
+          buildozer android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: APK
-          path: ${{ steps.buildozer.outputs.filename }}
+          path: bin/*.apk
