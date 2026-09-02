@@ -1,7 +1,7 @@
 [app]
-title = My Game
-package.name = mygame
-package.domain = org.example
+title = Malware
+package.name = malware
+package.domain = org.pixel60
 source.dir = .
 source.include_exts = py,png,jpg,jpeg,kv,atlas
 version = 1.0
