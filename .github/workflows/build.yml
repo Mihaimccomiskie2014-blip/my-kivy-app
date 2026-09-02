@@ -9,10 +9,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -31,12 +31,28 @@ jobs:
           pip install buildozer cython==0.29.36
 
       - name: Build APK
+        id: build
+        continue-on-error: true
         run: |
-          buildozer -v android debug
+          set -o pipefail
+          buildozer -v android debug 2>&1 | tee build.log
+          exit ${PIPESTATUS[0]}
 
+      - name: Upload Build Log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: warn
       - name: Upload APK
+        if: steps.build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: APK
           path: bin/*.apk
           if-no-files-found: error
+
+      - name: Fail if build failed
+        if: steps.build.outcome != 'success'
+        run: exit 1
